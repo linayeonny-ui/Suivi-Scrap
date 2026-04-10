@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Scrap HAB — Saisie</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #F5F4F0;
+    --surface: #FFFFFF;
+    --surface2: #EDEDEA;
+    --border: #DDDDD8;
+    --text: #1A1A18;
+    --text2: #6B6B66;
+    --text3: #9B9B96;
+    --accent: #1B4332;
+    --accent-light: #D8F3DC;
+    --accent-text: #1B4332;
+    --warn: #B45309;
+    --warn-light: #FEF3C7;
+    --danger: #991B1B;
+    --danger-light: #FEE2E2;
+    --matin-bg: #EFF6FF;
+    --matin-text: #1E40AF;
+    --soir-bg: #F5F3FF;
+    --soir-text: #5B21B6;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: var(--accent);
+    color: #fff;
+    padding: 0 16px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-title { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .topbar-sub { font-size: 11px; opacity: 0.7; margin-top: 1px; }
+  .topbar-logo { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; opacity: 0.9; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 56px;
+    z-index: 99;
+  }
+  .tab {
+    flex: 1;
+    padding: 12px 4px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all .15s;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-icon { display: block; font-size: 18px; margin-bottom: 2px; }
+
+  /* ── SCREENS ── */
+  .screen { display: none; padding: 16px; padding-bottom: 40px; }
+  .screen.active { display: block; }
+
+  /* ── META CARD ── */
+  .meta-card {
+    background: var(--accent);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .meta-card h2 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .meta-card .date { font-size: 13px; opacity: 0.75; margin-bottom: 10px; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .meta-item { background: rgba(255,255,255,0.12); border-radius: var(--radius-sm); padding: 8px 10px; }
+  .meta-item .ml { font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+  .meta-item .mv { font-size: 14px; font-weight: 600; }
+  .shift-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+  .shift-matin { background: var(--matin-bg); color: var(--matin-text); }
+  .shift-soir  { background: var(--soir-bg);  color: var(--soir-text); }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text3);
+    margin-bottom: 14px;
+  }
+
+  /* ── FIELDS ── */
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 5px; }
+  .field input, .field select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--surface);
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6B66' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* ── REF BLOCK ── */
+  .refs-wrapper { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+  .ref-item { padding: 12px; border-bottom: 1px solid var(--border); position: relative; }
+  .ref-item:last-child { border-bottom: none; }
+  .ref-num {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ref-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; }
+  .ref-grid input, .ref-grid select {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    background: var(--surface);
+    width: 100%;
+    outline: none;
+  }
+  .ref-grid input:focus, .ref-grid select:focus { border-color: var(--accent); }
+  .ref-label { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
+  .btn-del-ref {
+    background: var(--danger-light);
+    color: var(--danger);
+    border: none;
+    border-radius: 5px;
+    padding: 3px 8px;
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .btn-add-ref {
+    width: 100%;
+    padding: 11px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+    font-family: 'DM Sans', sans-serif;
+    transition: background .15s;
+  }
+  .btn-add-ref:active { background: var(--accent-light); }
+
+  /* ── POIDS ── */
+  .poids-input-wrap { position: relative; }
+  .poids-input-wrap input { padding-right: 44px; font-size: 20px; font-weight: 600; height: 52px; }
+  .poids-unit {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text3);
+  }
+
+  /* ── SUBMIT ── */
+  .btn-submit {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+    transition: opacity .15s;
+    margin-top: 4px;
+  }
+  .btn-submit:active { opacity: 0.85; }
+
+  /* ── SUCCESS ── */
+  .success-screen {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .success-icon {
+    width: 72px;
+    height: 72px;
+    background: var(--accent-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 32px;
+  }
+  .success-title { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .success-sub { font-size: 14px; color: var(--text2); margin-bottom: 28px; line-height: 1.6; }
+  .success-pills { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 28px; }
+  .pill {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--surface2);
+    color: var(--text2);
+  }
+  .btn-new {
+    padding: 13px 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  /* ── DB SCREEN ── */
+  .db-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .stat-card .sl { font-size: 11px; color: var(--text3); font-weight: 500; margin-bottom: 4px; }
+  .stat-card .sv { font-size: 24px; font-weight: 600; color: var(--text); }
+  .stat-card .su { font-size: 12px; color: var(--text2); }
+  .objective-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .obj-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
+  .obj-header span:first-child { font-weight: 500; }
+  .obj-header span:last-child { color: var(--text2); }
+  .bar-track { background: var(--surface2); border-radius: 4px; height: 8px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width .4s; }
+  .bar-fill.over { background: var(--danger); }
+
+  .section-label { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin: 16px 0 8px; }
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th {
+    background: var(--surface2);
+    padding: 9px 12px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text3);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  .empty { padding: 32px; text-align: center; color: var(--text3); font-size: 14px; }
+
+  .btn-export {
+    width: 100%;
+    padding: 13px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-export:active { background: var(--surface2); }
+  .btn-export-icon { font-size: 18px; }
+
+  /* ── QR SCREEN ── */
+  .qr-intro { font-size: 14px; color: var(--text2); line-height: 1.6; margin-bottom: 16px; }
+  .qr-cards { display: flex; flex-direction: column; gap: 12px; }
+  .qr-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .qr-canvas-wrap {
+    flex-shrink: 0;
+    width: 90px;
+    height: 90px;
+    background: #fff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .qr-info { flex: 1; }
+  .qr-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .qr-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .qr-url { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); margin-top: 6px; word-break: break-all; }
+  .btn-print {
+    width: 100%;
+    padding: 13px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* ── LIGNE SELECTOR (QR screen) ── */
+  .ligne-selector { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .ligne-chip {
+    padding: 7px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all .15s;
+  }
+  .ligne-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  @media print {
+    .tabs, .topbar, .btn-submit, .btn-export, .btn-print, .btn-add-ref { display: none !important; }
+    .screen { display: block !important; }
+    #screen-qr { display: block !important; }
+    #screen-form, #screen-db { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title" id="topbarTitle">Carrousel</div>
+    <div class="topbar-sub">Segment HAB — Saisie Scrap</div>
+  </div>
+  <div class="topbar-logo">HAB</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('form')">
+    <span class="tab-icon">📋</span>Saisie
+  </button>
+  <button class="tab" onclick="showTab('db')">
+    <span class="tab-icon">📊</span>Données
+  </button>
+  <button class="tab" onclick="showTab('qr')">
+    <span class="tab-icon">⬛</span>QR Codes
+  </button>
+</div>
+
+<!-- ══════════════════════ FORM SCREEN ══════════════════════ -->
+<div id="screen-form" class="screen active">
+
+  <div id="formMain">
+    <div class="meta-card" id="metaCard">
+      <h2 id="mcLigne">—</h2>
+      <div class="date" id="mcDate">—</div>
+      <div class="meta-grid">
+        <div class="meta-item"><div class="ml">Semaine</div><div class="mv" id="mcSem">—</div></div>
+        <div class="meta-item"><div class="ml">Équipe</div><div class="mv" id="mcEquipe">—</div></div>
+        <div class="meta-item"><div class="ml">Shift</div><div class="mv" id="mcShift">—</div></div>
+      </div>
+      <span class="shift-badge" id="mcBadge">—</span>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Ligne de production</div>
+      <div class="field">
+        <label>Ligne</label>
+        <select id="fLigne" onchange="onLigneChange()">
+          <option value="Carrousel">Carrousel</option>
+          <option value="LADEOV51">LADEOV51</option>
+          <option value="LADThermique">LADThermique</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Opérateur</div>
+      <div class="field">
+        <label>Zone</label>
+        <select id="fZone">
+          <option value="">— Zone —</option>
+          <option>Carrousel</option>
+          <option>Préblock</option>
+          <option>LADEOV51</option>
+          <option>LADThermique</option>
+          <option>Finition</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Type de scrap</label>
+        <select id="fType">
+          <option value="">— Type —</option>
+          <option value="Fils">Fils</option>
+          <option value="Composant">Composant</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Références</div>
+      <div class="refs-wrapper" id="refsList"></div>
+      <button class="btn-add-ref" onclick="addRef()">＋ Ajouter une référence</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Poids total du sac</div>
+      <div class="field">
+        <div class="poids-input-wrap">
+          <input type="number" id="fPoids" placeholder="0.00" step="0.01" min="0">
+          <span class="poids-unit">kg</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-submit" onclick="submitForm()">✓ Enregistrer le sac</button>
+  </div>
+
+  <div id="formSuccess" style="display:none">
+    <div class="success-screen">
+      <div class="success-icon">✓</div>
+      <div class="success-title">Enregistré !</div>
+      <div class="success-sub" id="successMsg">—</div>
+      <div class="success-pills" id="successPills"></div>
+      <button class="btn-new" onclick="resetForm()">Nouveau sac →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ DB SCREEN ══════════════════════ -->
+<div id="screen-db" class="screen">
+  <div class="db-stats">
+    <div class="stat-card"><div class="sl">Total aujourd'hui</div><div class="sv" id="statTotal">0</div><div class="su">kg</div></div>
+    <div class="stat-card"><div class="sl">Nb saisies</div><div class="sv" id="statCount">0</div><div class="su">sacs</div></div>
+  </div>
+
+  <div class="objective-bar">
+    <div class="obj-header">
+      <span>Objectif : 6 kg/jour</span>
+      <span id="objPct">0%</span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px">Actuel : <b id="objCurrent">0</b> kg — Cible ≤ 6 kg</div>
+  </div>
+
+  <div class="section-label">Base 1 — Résumé par sac</div>
+  <div class="table-wrap"><div class="table-scroll" id="db1Table"><div class="empty">Aucune saisie</div></div></div>
+
+  <div class="section-label">Base 2 — Détail par référence</div>
+  <div class="table-wrap"><div class="table-scroll" id="db2Table"><div class="empty">Aucune saisie</div></div></div>
+
+  <button class="btn-export" onclick="exportExcel()">
+    <span class="btn-export-icon">📥</span> Exporter en Excel (.xlsx)
+  </button>
+</div>
+
+<!-- ══════════════════════ QR SCREEN ══════════════════════ -->
+<div id="screen-qr" class="screen">
+  <p class="qr-intro">Un QR code par ligne. Scannez avec l'appareil photo du téléphone pour ouvrir directement le formulaire pré-rempli.</p>
+
+  <div class="card-title">Sélectionner une ligne à afficher</div>
+  <div class="ligne-selector">
+    <button class="ligne-chip active" onclick="selectQRLigne(this,'Carrousel')">Carrousel</button>
+    <button class="ligne-chip" onclick="selectQRLigne(this,'LADEOV51')">LADEOV51</button>
+    <button class="ligne-chip" onclick="selectQRLigne(this,'LADThermique')">LADThermique</button>
+  </div>
+
+  <div class="qr-cards" id="qrCards"></div>
+  <button class="btn-print" onclick="window.print()">🖨 Imprimer les QR codes</button>
+</div>
+
+<!-- SheetJS CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- QRCode CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+/* ─── DATA ─── */
+let db1 = [], db2 = [];
+let currentLigne = 'Carrousel';
+let refCount = 0;
+
+/* ─── PLANNING ─── */
+const HORAIRES = { matin: [6, 14], soir: [14, 22] };
+
+function getWeek(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
+}
+
+function getShift() {
+  const h = new Date().getHours();
+  if (h >= HORAIRES.matin[0] && h < HORAIRES.matin[1]) return 'Matin';
+  if (h >= HORAIRES.soir[0]  && h < HORAIRES.soir[1])  return 'Soir';
+  return 'Nuit';
+}
+
+function getEquipe(shift) {
+  const w = getWeek(new Date());
+  const paire = w % 2 === 0;
+  if (shift === 'Matin') return paire ? 'Équipe 1' : 'Équipe 2';
+  if (shift === 'Soir')  return paire ? 'Équipe 2' : 'Équipe 1';
+  return '—';
+}
+
+/* ─── META ─── */
+function initMeta() {
+  const now = new Date();
+  const shift = getShift();
+  const equipe = getEquipe(shift);
+  const sem = getWeek(now);
+  const dateStr = now.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+  document.getElementById('mcLigne').textContent = currentLigne;
+  document.getElementById('topbarTitle').textContent = currentLigne;
+  document.getElementById('mcDate').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+  document.getElementById('mcSem').textContent = 'S' + sem;
+  document.getElementById('mcEquipe').textContent = equipe;
+  document.getElementById('mcShift').textContent = shift;
+
+  const badge = document.getElementById('mcBadge');
+  badge.textContent = shift === 'Matin' ? '☀ Matin — 6h à 14h' : shift === 'Soir' ? '🌙 Soir — 14h à 22h' : '🌙 Nuit';
+  badge.className = 'shift-badge ' + (shift === 'Matin' ? 'shift-matin' : 'shift-soir');
+}
+
+function onLigneChange() {
+  currentLigne = document.getElementById('fLigne').value;
+  initMeta();
+}
+
+/* ─── REFS ─── */
+function addRef() {
+  refCount++;
+  const id = 'r' + refCount;
+  const wrap = document.getElementById('refsList');
+  const div = document.createElement('div');
+  div.className = 'ref-item';
+  div.id = id;
+  div.innerHTML = `
+    <div class="ref-num">
+      Réf. ${refCount}
+      <button class="btn-del-ref" onclick="document.getElementById('${id}').remove()">×</button>
+    </div>
+    <div class="ref-grid">
+      <div><div class="ref-label">Référence</div><input type="text" placeholder="Ex: FIL-001"></div>
+      <div><div class="ref-label">Qté</div><input type="number" min="0" step="1" placeholder="0"></div>
+      <div><div class="ref-label">Poste</div><select class="ref-poste">${Array.from({length:34},(_,i)=>`<option value="P${i+1}">P${i+1}</option>`).join('')}</select></div>
+    </div>`;
+  wrap.appendChild(div);
+}
+
+/* ─── SUBMIT ─── */
+function submitForm() {
+  const zone  = document.getElementById('fZone').value;
+  const poids = parseFloat(document.getElementById('fPoids').value) || 0;
+  const ligne = document.getElementById('fLigne').value;
+
+  const type  = document.getElementById('fType').value;
+
+  if (!zone || !type) { alert('Merci de remplir Zone et Type de scrap.'); return; }
+  if (poids <= 0) { alert('Merci d\'entrer un poids valide.'); return; }
+
+  const now = new Date();
+  const sem = 'S' + getWeek(now);
+  const date = now.toLocaleDateString('fr-FR');
+  const shift = getShift();
+  const equipe = getEquipe(shift);
+
+  const base1row = { Semaine: sem, Date: date, Segment: 'HAB', Equipe: equipe, Ligne: ligne, Area: zone, TypeScrap: type, 'Quantite_kg': poids, Shift: shift };
+  db1.push(base1row);
+
+  document.querySelectorAll('.ref-item').forEach(item => {
+    const inps = item.querySelectorAll('input');
+    const posteEl = item.querySelector('.ref-poste');
+    const ref = inps[0].value.trim(), qte = inps[1].value, poste = posteEl ? posteEl.value : '';
+    if (ref) {
+      db2.push({ Semaine: sem, Date: date, Segment: 'HAB', Equipe: equipe, Ligne: ligne, Area: zone, TypeScrap: type, Reference: ref, Quantite: parseInt(qte)||0, Poste: poste, Shift: shift });
+    }
+  });
+
+  document.getElementById('successMsg').textContent = poids + ' kg enregistrés avec succès.';
+  const pills = document.getElementById('successPills');
+  pills.innerHTML = [ligne, equipe, shift, type, zone].map(v => `<span class="pill">${v}</span>`).join('');
+  document.getElementById('formMain').style.display = 'none';
+  document.getElementById('formSuccess').style.display = 'block';
+  renderDB();
+}
+
+function resetForm() {
+  document.getElementById('fZone').value = '';
+  document.getElementById('fType').value = '';
+  document.getElementById('fPoids').value = '';
+  document.getElementById('refsList').innerHTML = '';
+  refCount = 0;
+  document.getElementById('formSuccess').style.display = 'none';
+  document.getElementById('formMain').style.display = 'block';
+  initMeta();
+  addRef();
+}
+
+/* ─── RENDER DB ─── */
+function renderDB() {
+  const cols1 = ['Semaine','Date','Segment','Equipe','Ligne','Area','TypeScrap','Quantite_kg','Shift'];
+  const cols2 = ['Semaine','Date','Segment','Equipe','Ligne','Area','TypeScrap','Reference','Quantite','Poste','Shift'];
+
+  function makeTable(data, cols) {
+    if (!data.length) return '<div class="empty">Aucune saisie</div>';
+    return '<table><thead><tr>' + cols.map(c => '<th>' + c + '</th>').join('') + '</tr></thead><tbody>' +
+      data.map(r => '<tr>' + cols.map(c => '<td>' + (r[c] !== undefined ? r[c] : '—') + '</td>').join('') + '</tr>').join('') +
+      '</tbody></table>';
+  }
+
+  document.getElementById('db1Table').innerHTML = makeTable(db1, cols1);
+  document.getElementById('db2Table').innerHTML = makeTable(db2, cols2);
+
+  const today = new Date().toLocaleDateString('fr-FR');
+  const todayTotal = db1.filter(r => r.Date === today).reduce((s, r) => s + (r.Quantite_kg || 0), 0);
+  const pct = Math.min(Math.round((todayTotal / 6) * 100), 200);
+
+  document.getElementById('statTotal').textContent = todayTotal.toFixed(2);
+  document.getElementById('statCount').textContent = db1.length;
+  document.getElementById('objPct').textContent = pct + '%';
+  document.getElementById('objCurrent').textContent = todayTotal.toFixed(2);
+
+  const bar = document.getElementById('barFill');
+  bar.style.width = Math.min(pct, 100) + '%';
+  bar.className = 'bar-fill' + (todayTotal > 6 ? ' over' : '');
+}
+
+/* ─── EXPORT EXCEL ─── */
+function exportExcel() {
+  if (!db1.length && !db2.length) { alert('Aucune donnée à exporter.'); return; }
+
+  const wb = XLSX.utils.book_new();
+
+  function sheetFromData(data, cols) {
+    if (!data.length) return XLSX.utils.aoa_to_sheet([cols]);
+    const ws = XLSX.utils.json_to_sheet(data, { header: cols });
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
+      if (cell) { cell.s = { font: { bold: true }, fill: { fgColor: { rgb: 'D8F3DC' } } }; }
+    }
+    ws['!cols'] = cols.map(() => ({ wch: 16 }));
+    return ws;
+  }
+
+  const cols1 = ['Semaine','Date','Segment','Equipe','Ligne','Area','TypeScrap','Quantite_kg','Shift'];
+  const cols2 = ['Semaine','Date','Segment','Equipe','Ligne','Area','TypeScrap','Reference','Quantite','Poste','Shift'];
+
+  XLSX.utils.book_append_sheet(wb, sheetFromData(db1, cols1), 'Resume_Sac');
+  XLSX.utils.book_append_sheet(wb, sheetFromData(db2, cols2), 'Detail_Reference');
+
+  const date = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, 'Scrap_HAB_' + date + '.xlsx');
+}
+
+/* ─── TABS ─── */
+function showTab(name) {
+  ['form','db','qr'].forEach(t => {
+    document.getElementById('screen-' + t).classList.toggle('active', t === name);
+  });
+  document.querySelectorAll('.tab').forEach((btn, i) => {
+    btn.classList.toggle('active', ['form','db','qr'][i] === name);
+  });
+  if (name === 'qr') renderQR('Carrousel');
+  if (name === 'db') renderDB();
+}
+
+/* ─── QR ─── */
+let currentQRLigne = 'Carrousel';
+
+function selectQRLigne(el, ligne) {
+  document.querySelectorAll('.ligne-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderQR(ligne);
+}
+
+function renderQR(ligne) {
+  currentQRLigne = ligne;
+  const container = document.getElementById('qrCards');
+  container.innerHTML = '';
+
+  const fileURL = window.location.href.split('?')[0] + '?ligne=' + encodeURIComponent(ligne);
+
+  const card = document.createElement('div');
+  card.className = 'qr-card';
+
+  const canvasWrap = document.createElement('div');
+  canvasWrap.className = 'qr-canvas-wrap';
+  const qrDiv = document.createElement('div');
+  canvasWrap.appendChild(qrDiv);
+
+  const info = document.createElement('div');
+  info.className = 'qr-info';
+  info.innerHTML = `
+    <div class="qr-name">${ligne}</div>
+    <div class="qr-desc">Scanner pour ouvrir le formulaire de saisie scrap pré-rempli pour cette ligne.</div>
+    <div class="qr-url">${fileURL}</div>`;
+
+  card.appendChild(canvasWrap);
+  card.appendChild(info);
+  container.appendChild(card);
+
+  setTimeout(() => {
+    new QRCode(qrDiv, { text: fileURL, width: 84, height: 84, correctLevel: QRCode.CorrectLevel.M });
+  }, 80);
+}
+
+/* ─── URL PARAMS ─── */
+function readURLParams() {
+  try {
+    const p = new URLSearchParams(window.location.search);
+    const l = p.get('ligne');
+    if (l && ['Carrousel','LADEOV51','LADThermique'].includes(l)) {
+      currentLigne = l;
+      document.getElementById('fLigne').value = l;
+    }
+  } catch(e) {}
+}
+
+/* ─── INIT ─── */
+readURLParams();
+initMeta();
+addRef();
+</script>
+</body>
+</html>
