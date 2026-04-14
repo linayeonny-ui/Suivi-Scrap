@@ -24,7 +24,7 @@ def create_app():
     register_blueprints(app)
 
     # Serve React build in production
-    frontend_dist = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "frontend", "dist")
+    frontend_dist = os.environ.get("FRONTEND_DIST", os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "frontend", "dist"))
     if os.path.exists(frontend_dist):
         @app.route("/", defaults={"path": ""})
         @app.route("/<path:path>")
