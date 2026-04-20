@@ -46,13 +46,13 @@ with app.app_context():
         if not Raison.query.filter_by(name=name).first():
             db.session.add(Raison(name=name))
 
-    # Create sample QR codes
+    # Create sample QR codes (assignment codes)
     qr_codes_data = [
-        {"code": "QR001", "segment": "Segment A", "equipe": "Équipe Alpha", "ligne": "Ligne 1"},
-        {"code": "QR002", "segment": "Segment A", "equipe": "Équipe Beta", "ligne": "Ligne 2"},
-        {"code": "QR003", "segment": "Segment B", "equipe": "Équipe Gamma", "ligne": "Ligne 3"},
-        {"code": "QR004", "segment": "Segment B", "equipe": "Équipe Delta", "ligne": "Ligne 4"},
-        {"code": "QR005", "segment": "Segment C", "equipe": "Équipe Epsilon", "ligne": "Ligne 5"},
+        {"code": "A1", "section": "Section 1", "segment": "Segment A", "equipe": "Équipe Alpha", "ligne": "Ligne 1"},
+        {"code": "A2", "section": "Section 1", "segment": "Segment A", "equipe": "Équipe Beta", "ligne": "Ligne 2"},
+        {"code": "B1", "section": "Section 2", "segment": "Segment B", "equipe": "Équipe Gamma", "ligne": "Ligne 3"},
+        {"code": "B2", "section": "Section 2", "segment": "Segment B", "equipe": "Équipe Delta", "ligne": "Ligne 4"},
+        {"code": "C1", "section": "Section 3", "segment": "Segment C", "equipe": "Équipe Epsilon", "ligne": "Ligne 5"},
     ]
     for qr_data in qr_codes_data:
         if not QRCode.query.filter_by(code=qr_data["code"]).first():

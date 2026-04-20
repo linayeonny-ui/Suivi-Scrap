@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { qrAPI } from '../../lib/api'
 import { formatDate, formatDateTime } from '../../lib/utils'
 import {
-  Plus, QrCode, Trash2, Edit3, Eye, ChevronLeft, ChevronRight,
+  Plus, QrCode, Trash2, Edit3, ChevronLeft, ChevronRight,
   X, Save, Loader2, Download, ToggleLeft, ToggleRight,
 } from 'lucide-react'
 
@@ -16,13 +16,9 @@ export default function QRCodes() {
   // Create/Edit modal
   const [showModal, setShowModal] = useState(false)
   const [editingQR, setEditingQR] = useState(null)
-  const [form, setForm] = useState({ code: '', segment: '', equipe: '', ligne: '' })
+  const [form, setForm] = useState({ code: '', section: '', segment: '', equipe: '', ligne: '' })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-
-  // QR image modal
-  const [qrImage, setQrImage] = useState(null)
-  const [loadingImage, setLoadingImage] = useState(false)
 
   useEffect(() => {
     loadQRCodes()
@@ -44,21 +40,21 @@ export default function QRCodes() {
 
   const openCreate = () => {
     setEditingQR(null)
-    setForm({ code: '', segment: '', equipe: '', ligne: '' })
+    setForm({ code: '', section: '', segment: '', equipe: '', ligne: '' })
     setError('')
     setShowModal(true)
   }
 
   const openEdit = (qr) => {
     setEditingQR(qr)
-    setForm({ code: qr.code, segment: qr.segment, equipe: qr.equipe, ligne: qr.ligne })
+    setForm({ code: qr.code, section: qr.section, segment: qr.segment, equipe: qr.equipe, ligne: qr.ligne })
     setError('')
     setShowModal(true)
   }
 
   const saveQR = async () => {
-    if (!form.segment || !form.equipe || !form.ligne) {
-      setError('Tous les champs sont requis')
+    if (!form.section || !form.segment || !form.equipe || !form.ligne) {
+      setError('Tous les champs sont requis (Section, Segment, Équipe, Ligne)')
       return
     }
     setSaving(true)
@@ -97,17 +93,25 @@ export default function QRCodes() {
     }
   }
 
-  const showQRImage = async (qr) => {
-    setLoadingImage(true)
-    setQrImage(null)
+  // Single site QR code
+  const [siteQR, setSiteQR] = useState(null)
+  const [showSiteQRModal, setShowSiteQRModal] = useState(false)
+  const [loadingSiteQR, setLoadingSiteQR] = useState(false)
+  const [siteQRError, setSiteQRError] = useState('')
+
+  const openSiteQR = async () => {
+    setShowSiteQRModal(true)
+    setLoadingSiteQR(true)
+    setSiteQRError('')
+    setSiteQR(null)
     try {
       const baseUrl = window.location.origin
-      const res = await qrAPI.getImage(qr.id, baseUrl)
-      setQrImage({ ...qr, image: res.data.image, url: res.data.url })
-    } catch {
-      // ignore
+      const res = await qrAPI.getSiteQR(baseUrl)
+      setSiteQR(res.data)
+    } catch (err) {
+      setSiteQRError(err.response?.data?.error || 'Erreur lors du chargement du QR Site')
     } finally {
-      setLoadingImage(false)
+      setLoadingSiteQR(false)
     }
   }
 
@@ -115,13 +119,19 @@ export default function QRCodes() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">QR Codes</h2>
-          <p className="text-gray-500 mt-1">{total} QR code(s)</p>
+          <h2 className="text-2xl font-bold text-gray-900">Codes d'affectation</h2>
+          <p className="text-gray-500 mt-1">{total} code(s) d'affectation</p>
         </div>
-        <button onClick={openCreate} className="btn-primary">
-          <Plus className="w-4 h-4" />
-          Nouveau QR Code
-        </button>
+        <div className="flex gap-2">
+          <button onClick={openSiteQR} className="btn-secondary">
+            <QrCode className="w-4 h-4" />
+            QR Site
+          </button>
+          <button onClick={openCreate} className="btn-primary">
+            <Plus className="w-4 h-4" />
+            Nouveau code
+          </button>
+        </div>
       </div>
 
       {/* QR Codes table */}
@@ -131,6 +141,7 @@ export default function QRCodes() {
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="table-header">Code</th>
+                <th className="table-header">Section</th>
                 <th className="table-header">Segment</th>
                 <th className="table-header">Équipe</th>
                 <th className="table-header">Ligne</th>
@@ -142,13 +153,14 @@ export default function QRCodes() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={8} className="table-cell text-center py-8"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary-600" /></td></tr>
+                <tr><td colSpan={9} className="table-cell text-center py-8"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary-600" /></td></tr>
               ) : qrCodes.length === 0 ? (
-                <tr><td colSpan={8} className="table-cell text-center py-8 text-gray-400">Aucun QR code</td></tr>
+                <tr><td colSpan={9} className="table-cell text-center py-8 text-gray-400">Aucun code d'affectation</td></tr>
               ) : (
                 qrCodes.map((qr) => (
                   <tr key={qr.id} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="table-cell font-mono font-medium">{qr.code}</td>
+                    <td className="table-cell">{qr.section}</td>
                     <td className="table-cell">{qr.segment}</td>
                     <td className="table-cell">{qr.equipe}</td>
                     <td className="table-cell">{qr.ligne}</td>
@@ -165,9 +177,6 @@ export default function QRCodes() {
                     <td className="table-cell text-gray-500">{formatDate(qr.created_at)}</td>
                     <td className="table-cell text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => showQRImage(qr)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg" title="Voir QR">
-                          <QrCode className="w-4 h-4" />
-                        </button>
                         <button onClick={() => openEdit(qr)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg" title="Modifier">
                           <Edit3 className="w-4 h-4" />
                         </button>
@@ -204,7 +213,7 @@ export default function QRCodes() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
           <div className="bg-white rounded-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-gray-900 mb-4">
-              {editingQR ? 'Modifier QR Code' : 'Nouveau QR Code'}
+              {editingQR ? 'Modifier le code' : 'Nouveau code d\'affectation'}
             </h3>
 
             {error && (
@@ -220,6 +229,16 @@ export default function QRCodes() {
                   onChange={(e) => setForm({ ...form, code: e.target.value })}
                   className="input-field"
                   placeholder="Laisser vide pour auto-générer"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Section *</label>
+                <input
+                  type="text"
+                  value={form.section}
+                  onChange={(e) => setForm({ ...form, section: e.target.value })}
+                  className="input-field"
+                  placeholder="Section 1"
                 />
               </div>
               <div>
@@ -265,30 +284,36 @@ export default function QRCodes() {
         </div>
       )}
 
-      {/* QR Image Modal */}
-      {qrImage && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setQrImage(null)}>
+      {/* Site QR Modal */}
+      {showSiteQRModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowSiteQRModal(false)}>
           <div className="bg-white rounded-xl max-w-sm w-full p-6 text-center" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">QR Code: {qrImage.code}</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">QR Code du Site</h3>
             <p className="text-sm text-gray-500 mb-4">
-              {qrImage.segment} | {qrImage.equipe} | {qrImage.ligne}
+              Ce QR code est unique. Tous les opérateurs le scannent puis entrent leur code d'affectation.
             </p>
-            {loadingImage ? (
+            {loadingSiteQR ? (
               <Loader2 className="w-8 h-8 animate-spin mx-auto" />
-            ) : (
-              <img src={qrImage.image} alt="QR Code" className="mx-auto mb-4" />
-            )}
-            <p className="text-xs text-gray-400 mb-4 break-all">URL: {qrImage.url}</p>
+            ) : siteQRError ? (
+              <div className="bg-red-50 text-red-700 text-sm rounded-lg p-3 mb-4">{siteQRError}</div>
+            ) : siteQR ? (
+              <>
+                <img src={siteQR.image} alt="QR Code Site" className="mx-auto mb-4" />
+                <p className="text-xs text-gray-400 mb-4 break-all">URL: {siteQR.url}</p>
+              </>
+            ) : null}
             <div className="flex gap-3">
-              <button onClick={() => setQrImage(null)} className="btn-secondary flex-1">Fermer</button>
-              <a
-                href={qrImage.image}
-                download={`qr_${qrImage.code}.png`}
-                className="btn-primary flex-1"
-              >
-                <Download className="w-4 h-4" />
-                Télécharger
-              </a>
+              <button onClick={() => setShowSiteQRModal(false)} className="btn-secondary flex-1">Fermer</button>
+              {siteQR && !loadingSiteQR && (
+                <a
+                  href={siteQR.image}
+                  download="qr_site.png"
+                  className="btn-primary flex-1"
+                >
+                  <Download className="w-4 h-4" />
+                  Télécharger
+                </a>
+              )}
             </div>
           </div>
         </div>

@@ -9,7 +9,7 @@ import {
 const navItems = [
   { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
   { to: '/admin/scrap', icon: FileText, label: 'Scrap' },
-  { to: '/admin/qr-codes', icon: QrCode, label: 'QR Codes' },
+  { to: '/admin/qr-codes', icon: QrCode, label: 'Codes Affectation' },
   { to: '/admin/reference', icon: Settings, label: 'Référentiels' },
   { to: '/admin/wire-mappings', icon: Upload, label: 'Fils / CCFE' },
   { to: '/admin/operator-codes', icon: Key, label: 'Codes Opérateur' },

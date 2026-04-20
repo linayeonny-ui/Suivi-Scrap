@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE = 'https://fatilina.pythonanywhere.com/api'
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://fatilina.pythonanywhere.com/api'
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -60,14 +60,14 @@ export const qrAPI = {
   create: (data) => api.post('/qr-codes/', data),
   update: (id, data) => api.put(`/qr-codes/${id}`, data),
   delete: (id) => api.delete(`/qr-codes/${id}`),
-  getImage: (id, baseUrl) => api.get(`/qr-codes/${id}/image`, { params: { base_url: baseUrl } }),
-  scan: (code) => api.get(`/qr-codes/${code}/scan`),
+  getSiteQR: (baseUrl) => api.get('/qr-codes/site-qr-image', { params: { base_url: baseUrl } }),
+  lookup: (code) => api.get(`/qr-codes/lookup/${code}`),
 }
 
 // ── Scrap ────────────────────────────────────────────────────────────────────
 export const scrapAPI = {
   verifyOperatorCode: (code) => api.post('/scrap/verify-code', { code }),
-  createSession: (qr_code_id, operator_code) => api.post('/scrap/session', { qr_code_id, operator_code }),
+  createSession: (assignment_code) => api.post('/scrap/session', { assignment_code }),
   getSession: (id) => api.get(`/scrap/session/${id}`),
   addEntry: (sessionId, data) => api.post(`/scrap/session/${sessionId}/entry`, data),
   addEntriesBatch: (sessionId, data) => api.post(`/scrap/session/${sessionId}/entries-batch`, data),

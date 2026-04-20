@@ -108,6 +108,7 @@ def list_sessions():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 20, type=int)
     status = request.args.get("status")
+    section = request.args.get("section")
     segment = request.args.get("segment")
     equipe = request.args.get("equipe")
     ligne = request.args.get("ligne")
@@ -119,6 +120,8 @@ def list_sessions():
 
     if status:
         query = query.filter(ScrapSession.status == status)
+    if section:
+        query = query.filter(ScrapSession.section.ilike(f"%{section}%"))
     if segment:
         query = query.filter(ScrapSession.segment.ilike(f"%{segment}%"))
     if equipe:
@@ -295,6 +298,14 @@ def dashboard():
         .all()
     )
 
+    # Scrap by section
+    scrap_by_section = (
+        db.session.query(ScrapSession.section, func.count(ScrapEntry.id), func.coalesce(func.sum(ScrapEntry.quantite), 0))
+        .join(ScrapEntry, ScrapEntry.session_id == ScrapSession.id)
+        .group_by(ScrapSession.section)
+        .all()
+    )
+
     # Scrap by segment
     scrap_by_segment = (
         db.session.query(ScrapSession.segment, func.count(ScrapEntry.id), func.coalesce(func.sum(ScrapEntry.quantite), 0))
@@ -379,6 +390,7 @@ def dashboard():
         },
         "scrap_by_type": [{"name": r[0], "count": r[1], "quantite": int(r[2])} for r in scrap_by_type],
         "scrap_by_area": [{"name": r[0], "count": r[1], "quantite": int(r[2])} for r in scrap_by_area],
+        "scrap_by_section": [{"name": r[0], "count": r[1], "quantite": int(r[2])} for r in scrap_by_section],
         "scrap_by_segment": [{"name": r[0], "count": r[1], "quantite": int(r[2])} for r in scrap_by_segment],
         "scrap_by_equipe": [{"name": r[0], "count": r[1], "quantite": int(r[2])} for r in scrap_by_equipe],
         "scrap_by_raison": [{"name": r[0], "count": r[1], "quantite": int(r[2])} for r in scrap_by_raison],
@@ -400,6 +412,7 @@ def export_data():
     format_type = request.args.get("format", "csv")
     date_from = request.args.get("date_from")
     date_to = request.args.get("date_to")
+    section = request.args.get("section")
     segment = request.args.get("segment")
     equipe = request.args.get("equipe")
     ligne = request.args.get("ligne")
@@ -414,6 +427,8 @@ def export_data():
         query = query.filter(ScrapSession.date >= date_from)
     if date_to:
         query = query.filter(ScrapSession.date <= date_to)
+    if section:
+        query = query.filter(ScrapSession.section.ilike(f"%{section}%"))
     if segment:
         query = query.filter(ScrapSession.segment.ilike(f"%{segment}%"))
     if equipe:
@@ -433,7 +448,7 @@ def export_data():
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow([
-            "Semaine", "Date", "Segment", "Equipe", "Ligne",
+            "Semaine", "Date", "Section", "Segment", "Equipe", "Ligne",
             "Area", "Type Scrap", "Numéro de pièce", "Fil",
             "Quantité", "Raison", "Poste", "Poids Total (kg)", "Statut"
         ])
@@ -454,6 +469,7 @@ def export_data():
             writer.writerow([
                 session.semaine,
                 session.date.isoformat() if session.date else "",
+                session.section,
                 session.segment,
                 session.equipe,
                 session.ligne,
@@ -527,7 +543,7 @@ def export_data():
         ws1 = wb.active
         ws1.title = "Données Scrap"
         headers1 = [
-            "Semaine", "Date", "Segment", "Équipe", "Ligne",
+            "Semaine", "Date", "Section", "Segment", "Équipe", "Ligne",
             "Area", "Type Scrap", "N° Pièce / CCFE", "Fil",
             "Quantité", "Raison", "Poste"
         ]
@@ -544,6 +560,7 @@ def export_data():
             values = [
                 session.semaine,
                 session.date.isoformat() if session.date else "",
+                session.section,
                 session.segment,
                 session.equipe,
                 session.ligne,
@@ -565,7 +582,7 @@ def export_data():
 
         # ── Sheet 2: Résumé Poids ───────────────────────────────────────────
         ws2 = wb.create_sheet("Résumé Poids")
-        headers2 = ["Semaine", "Date", "Segment", "Équipe", "Ligne", "Type Scrap", "Poids Total (kg)"]
+        headers2 = ["Semaine", "Date", "Section", "Segment", "Équipe", "Ligne", "Type Scrap", "Poids Total (kg)"]
         ws2.append(headers2)
         style_header_row(ws2, len(headers2))
 
@@ -578,6 +595,7 @@ def export_data():
                 seen_sessions[key] = {
                     "semaine": session.semaine,
                     "date": session.date.isoformat() if session.date else "",
+                    "section": session.section,
                     "segment": session.segment,
                     "equipe": session.equipe,
                     "ligne": session.ligne,
@@ -590,6 +608,7 @@ def export_data():
             values = [
                 row_data["semaine"],
                 row_data["date"],
+                row_data["section"],
                 row_data["segment"],
                 row_data["equipe"],
                 row_data["ligne"],
@@ -600,7 +619,7 @@ def export_data():
             for col in range(1, len(values) + 1):
                 style_data_cell(ws2, row_num, col, alt=(idx % 2 == 1))
             # Highlight weight column
-            weight_cell = ws2.cell(row=row_num, column=7)
+            weight_cell = ws2.cell(row=row_num, column=8)
             weight_cell.font = Font(name="Calibri", bold=True, size=10, color="1F4E79")
 
         auto_width(ws2, len(headers2))

@@ -34,7 +34,7 @@ export default function Dashboard() {
     return <p className="text-gray-500">Erreur de chargement du tableau de bord</p>
   }
 
-  const { summary, scrap_by_type, scrap_by_area, scrap_by_segment, scrap_by_equipe, scrap_by_raison, weekly_trend, daily_trend, top_postes, top_fils } = data
+  const { summary, scrap_by_type, scrap_by_area, scrap_by_section, scrap_by_segment, scrap_by_equipe, scrap_by_raison, weekly_trend, daily_trend, top_postes, top_fils } = data
 
   return (
     <div className="space-y-6">
@@ -260,8 +260,29 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Scrap by Segment & Equipe */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Scrap by Section, Segment & Equipe */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="card">
+          <div className="card-header">
+            <h3 className="font-semibold text-gray-900">Scrap par Section</h3>
+          </div>
+          <div className="card-body">
+            {scrap_by_section && scrap_by_section.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={scrap_by_section}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="quantite" fill="#06b6d4" radius={[4, 4, 0, 0]} name="Quantité" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-gray-400 text-center py-8">Aucune donnée</p>
+            )}
+          </div>
+        </div>
+
         <div className="card">
           <div className="card-header">
             <h3 className="font-semibold text-gray-900">Scrap par Segment</h3>

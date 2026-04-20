@@ -22,6 +22,7 @@ export default function ScrapEntries() {
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState({
     status: '',
+    section: '',
     segment: '',
     equipe: '',
     ligne: '',
@@ -172,6 +173,16 @@ export default function ScrapEntries() {
               </select>
             </div>
             <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Section</label>
+              <input
+                type="text"
+                value={filters.section}
+                onChange={(e) => setFilters({ ...filters, section: e.target.value })}
+                className="input-field text-sm"
+                placeholder="Section..."
+              />
+            </div>
+            <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Segment</label>
               <input
                 type="text"
@@ -231,7 +242,7 @@ export default function ScrapEntries() {
             </div>
             <div className="flex items-end">
               <button
-                onClick={() => { setFilters({ status: '', segment: '', equipe: '', ligne: '', semaine: '', date_from: '', date_to: '' }); setPage(1) }}
+                onClick={() => { setFilters({ status: '', section: '', segment: '', equipe: '', ligne: '', semaine: '', date_from: '', date_to: '' }); setPage(1) }}
                 className="btn-secondary text-sm"
               >
                 <X className="w-3 h-3" />
@@ -250,6 +261,7 @@ export default function ScrapEntries() {
               <tr className="border-b border-gray-100">
                 <th className="table-header">Semaine</th>
                 <th className="table-header">Date</th>
+                <th className="table-header">Section</th>
                 <th className="table-header">Segment</th>
                 <th className="table-header">Équipe</th>
                 <th className="table-header">Ligne</th>
@@ -261,14 +273,15 @@ export default function ScrapEntries() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={9} className="table-cell text-center py-8"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary-600" /></td></tr>
+                <tr><td colSpan={10} className="table-cell text-center py-8"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary-600" /></td></tr>
               ) : sessions.length === 0 ? (
-                <tr><td colSpan={9} className="table-cell text-center py-8 text-gray-400">Aucune session trouvée</td></tr>
+                <tr><td colSpan={10} className="table-cell text-center py-8 text-gray-400">Aucune session trouvée</td></tr>
               ) : (
                 sessions.map((s) => (
                   <tr key={s.id} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="table-cell font-medium">S{s.semaine}</td>
                     <td className="table-cell">{formatDate(s.date)}</td>
+                    <td className="table-cell">{s.section}</td>
                     <td className="table-cell">{s.segment}</td>
                     <td className="table-cell">{s.equipe}</td>
                     <td className="table-cell">{s.ligne}</td>
@@ -332,7 +345,7 @@ export default function ScrapEntries() {
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Session #{viewingSession.id}</h3>
                 <p className="text-sm text-gray-500">
-                  {viewingSession.segment} | {viewingSession.equipe} | {viewingSession.ligne}
+                  {viewingSession.section} | {viewingSession.segment} | {viewingSession.equipe} | {viewingSession.ligne}
                 </p>
               </div>
               <button onClick={() => setViewingSession(null)} className="p-2 hover:bg-gray-100 rounded-lg">

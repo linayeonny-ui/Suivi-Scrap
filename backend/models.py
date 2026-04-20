@@ -37,6 +37,7 @@ class QRCode(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(100), unique=True, nullable=False)
+    section = db.Column(db.String(100), nullable=False)
     segment = db.Column(db.String(100), nullable=False)
     equipe = db.Column(db.String(100), nullable=False)
     ligne = db.Column(db.String(100), nullable=False)
@@ -49,6 +50,7 @@ class QRCode(db.Model):
         return {
             "id": self.id,
             "code": self.code,
+            "section": self.section,
             "segment": self.segment,
             "equipe": self.equipe,
             "ligne": self.ligne,
@@ -171,6 +173,7 @@ class ScrapSession(db.Model):
     qr_code_id = db.Column(db.Integer, db.ForeignKey("qr_codes.id"), nullable=False)
     semaine = db.Column(db.Integer, nullable=False)
     date = db.Column(db.Date, nullable=False)
+    section = db.Column(db.String(100), nullable=False)
     segment = db.Column(db.String(100), nullable=False)
     equipe = db.Column(db.String(100), nullable=False)
     ligne = db.Column(db.String(100), nullable=False)
@@ -187,6 +190,7 @@ class ScrapSession(db.Model):
             "qr_code_id": self.qr_code_id,
             "semaine": self.semaine,
             "date": self.date.isoformat() if self.date else None,
+            "section": self.section,
             "segment": self.segment,
             "equipe": self.equipe,
             "ligne": self.ligne,

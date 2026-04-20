@@ -26,19 +26,14 @@ def verify_operator_code():
 
 @scrap_bp.route("/session", methods=["POST"])
 def create_session():
-    """Create a new scrap session when operator scans QR code. Requires operator code."""
+    """Create a new scrap session. Operator enters assignment code only."""
     data = request.get_json()
-    qr_code_id = data.get("qr_code_id")
-    operator_code = (data.get("operator_code") or "").strip()
+    assignment_code = (data.get("assignment_code") or "").strip()
 
-    # Verify operator code
-    op_code = OperatorCode.query.filter_by(code=operator_code, is_active=True).first()
-    if not op_code:
-        return jsonify({"error": "Code opérateur invalide ou requis"}), 401
-
-    qr = QRCode.query.filter_by(id=qr_code_id, is_active=True).first()
+    # Look up assignment code
+    qr = QRCode.query.filter_by(code=assignment_code, is_active=True).first()
     if not qr:
-        return jsonify({"error": "Invalid or inactive QR code"}), 400
+        return jsonify({"error": "Code d'affectation invalide ou inactif"}), 400
 
     now = datetime.now(timezone.utc)
     semaine = _get_week_number(now.date())
@@ -47,6 +42,7 @@ def create_session():
         qr_code_id=qr.id,
         semaine=semaine,
         date=now.date(),
+        section=qr.section,
         segment=qr.segment,
         equipe=qr.equipe,
         ligne=qr.ligne,

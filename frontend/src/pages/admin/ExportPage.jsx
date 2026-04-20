@@ -9,6 +9,7 @@ export default function ExportPage() {
   const [filters, setFilters] = useState({
     date_from: '',
     date_to: '',
+    section: '',
     segment: '',
     equipe: '',
     ligne: '',
@@ -74,6 +75,16 @@ export default function ExportPage() {
                 onChange={(e) => setFilters({ ...filters, semaine: e.target.value })}
                 className="input-field"
                 placeholder="N° semaine"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Section</label>
+              <input
+                type="text"
+                value={filters.section}
+                onChange={(e) => setFilters({ ...filters, section: e.target.value })}
+                className="input-field"
+                placeholder="Section..."
               />
             </div>
             <div>

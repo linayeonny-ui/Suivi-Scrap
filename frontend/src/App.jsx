@@ -16,6 +16,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Operator scan route - no auth required */}
+        <Route path="/scan" element={<ScanPage />} />
         <Route path="/scan/:code" element={<ScanPage />} />
 
         {/* Admin routes */}

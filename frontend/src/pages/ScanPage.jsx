@@ -1,33 +1,31 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { scrapAPI, qrAPI, refAPI } from '../lib/api'
 import {
   ScanLine, Plus, Trash2, CheckCircle2, Package, ChevronDown,
-  Loader2, AlertCircle, Scale, ArrowRight, Key, Split,
+  Loader2, AlertCircle, Scale, ArrowRight, Split, Hash,
 } from 'lucide-react'
 
 const STEPS = {
-  LOADING: 'loading',
-  CODE: 'code',
+  ASSIGNMENT: 'assignment',   // Enter assignment code
   FORM: 'form',
   WEIGHT: 'weight',
   DONE: 'done',
 }
 
 export default function ScanPage() {
-  const { code } = useParams()
-  const navigate = useNavigate()
+  const { code: urlCode } = useParams()
+  const [searchParams] = useSearchParams()
 
-  const [step, setStep] = useState(STEPS.LOADING)
+  const [step, setStep] = useState(STEPS.ASSIGNMENT)
   const [error, setError] = useState('')
   const [qrData, setQrData] = useState(null)
   const [session, setSession] = useState(null)
   const [entries, setEntries] = useState([])
 
-  // Operator code
-  const [operatorCode, setOperatorCode] = useState('')
-  const [codeVerified, setCodeVerified] = useState(false)
-  const [codeLabel, setCodeLabel] = useState('')
+  // Assignment code (entered by operator)
+  const [assignmentCode, setAssignmentCode] = useState('')
+  const [assignmentVerified, setAssignmentVerified] = useState(false)
 
   // Form fields
   const [areas, setAreas] = useState([])
@@ -51,30 +49,57 @@ export default function ScanPage() {
   const [submitting, setSubmitting] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
 
-  // Load QR code data and reference data
+  // If code is in URL (backward compat or from QR with ?code=), pre-fill it
   useEffect(() => {
-    async function init() {
+    const codeFromUrl = urlCode || searchParams.get('code') || ''
+    if (codeFromUrl) {
+      setAssignmentCode(codeFromUrl)
+      lookupAndAdvance(codeFromUrl)
+    }
+  }, [urlCode, searchParams])
+
+  // Load reference data on mount
+  useEffect(() => {
+    async function loadRef() {
       try {
-        const [qrRes, areasRes, typesRes, raisonsRes] = await Promise.all([
-          qrAPI.scan(code),
+        const [areasRes, typesRes, raisonsRes] = await Promise.all([
           refAPI.listAreas(),
           refAPI.listTypeScraps(),
           refAPI.listRaisons(),
         ])
-
-        const qr = qrRes.data
-        setQrData(qr)
         setAreas(areasRes.data)
         setTypeScraps(typesRes.data)
         setRaisons(raisonsRes.data)
-        setStep(STEPS.CODE)
-      } catch (err) {
-        setError(err.response?.data?.error || 'QR code invalide ou inactif')
-        setStep(STEPS.CODE)
+      } catch {
+        // ignore
       }
     }
-    init()
-  }, [code])
+    loadRef()
+  }, [])
+
+  // Look up assignment code and create session directly
+  const lookupAndAdvance = async (code) => {
+    if (!code.trim()) {
+      setError('Veuillez entrer le code d\'affectation')
+      return
+    }
+    setSubmitting(true)
+    setError('')
+    try {
+      const res = await qrAPI.lookup(code.trim())
+      setQrData(res.data)
+      setAssignmentVerified(true)
+
+      // Create session immediately
+      const sessionRes = await scrapAPI.createSession(code.trim())
+      setSession(sessionRes.data)
+      setStep(STEPS.FORM)
+    } catch (err) {
+      setError(err.response?.data?.error || 'Code d\'affectation invalide ou inactif')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   // Load postes when area changes
   useEffect(() => {
@@ -116,30 +141,6 @@ export default function ScanPage() {
     setShowSuggestions(false)
   }
 
-  // Verify operator code and create session
-  const verifyAndCreateSession = async () => {
-    if (!operatorCode.trim()) {
-      setError('Veuillez entrer le code opérateur')
-      return
-    }
-    setSubmitting(true)
-    setError('')
-    try {
-      // Verify code
-      const verifyRes = await scrapAPI.verifyOperatorCode(operatorCode.trim())
-      setCodeVerified(true)
-      setCodeLabel(verifyRes.data.label || '')
-
-      // Create session
-      const sessionRes = await scrapAPI.createSession(qrData.id, operatorCode.trim())
-      setSession(sessionRes.data)
-      setStep(STEPS.FORM)
-    } catch (err) {
-      setError(err.response?.data?.error || 'Code opérateur invalide')
-    } finally {
-      setSubmitting(false)
-    }
-  }
 
   // Split-by-raison helpers
   const addSplit = () => {
@@ -265,24 +266,54 @@ export default function ScanPage() {
     }
   }
 
-  if (step === STEPS.LOADING) {
+  // Assignment code entry step
+  if (step === STEPS.ASSIGNMENT && !assignmentVerified) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-100 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-primary-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Chargement du QR code...</p>
-        </div>
-      </div>
-    )
-  }
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
+        <div className="card p-8 max-w-md w-full">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Hash className="w-8 h-8 text-primary-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">Déclaration Scrap</h2>
+            <p className="text-sm text-gray-500 mt-1">Scannez le QR code du site</p>
+          </div>
 
-  if (error && !qrData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4">
-        <div className="card p-8 max-w-md w-full text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Erreur</h2>
-          <p className="text-gray-600">{error}</p>
+          {error && (
+            <div className="bg-red-50 text-red-700 text-sm rounded-lg p-3 mb-4 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              {error}
+            </div>
+          )}
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Code d'affectation *
+            </label>
+            <input
+              type="text"
+              value={assignmentCode}
+              onChange={(e) => setAssignmentCode(e.target.value.toUpperCase())}
+              className="input-field text-center text-lg font-mono tracking-widest"
+              placeholder="ENTREZ LE CODE"
+              maxLength={20}
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && lookupAndAdvance(assignmentCode)}
+            />
+          </div>
+
+          <button
+            onClick={() => lookupAndAdvance(assignmentCode)}
+            disabled={submitting}
+            className="btn-primary w-full"
+          >
+            {submitting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <ArrowRight className="w-4 h-4" />
+            )}
+            Rechercher le code
+          </button>
         </div>
       </div>
     )
@@ -306,65 +337,13 @@ export default function ScanPage() {
             </p>
           </div>
           <p className="text-sm text-gray-400">
-            Vous pouvez scanner un autre QR code pour commencer une nouvelle session.
+            Vous pouvez entrer un nouveau code d'affectation pour commencer une nouvelle session.
           </p>
         </div>
       </div>
     )
   }
 
-  // Operator code entry gate
-  if (step === STEPS.CODE && !codeVerified) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="card p-8 max-w-md w-full">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Key className="w-8 h-8 text-primary-600" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900">Accès Opérateur</h2>
-            <p className="text-sm text-gray-500 mt-1">QR: {code}</p>
-          </div>
-
-          {error && (
-            <div className="bg-red-50 text-red-700 text-sm rounded-lg p-3 mb-4 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              {error}
-            </div>
-          )}
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Code opérateur *
-            </label>
-            <input
-              type="text"
-              value={operatorCode}
-              onChange={(e) => setOperatorCode(e.target.value.toUpperCase())}
-              className="input-field text-center text-lg font-mono tracking-widest"
-              placeholder="ENTREZ LE CODE"
-              maxLength={20}
-              autoFocus
-              onKeyDown={(e) => e.key === 'Enter' && verifyAndCreateSession()}
-            />
-          </div>
-
-          <button
-            onClick={verifyAndCreateSession}
-            disabled={submitting}
-            className="btn-primary w-full"
-          >
-            {submitting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <ArrowRight className="w-4 h-4" />
-            )}
-            Vérifier et continuer
-          </button>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -377,7 +356,7 @@ export default function ScanPage() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-gray-900">Déclaration Scrap</h1>
-              <p className="text-xs text-gray-500">QR: {code} | Opérateur: {codeLabel}</p>
+              <p className="text-xs text-gray-500">Code: {qrData?.code}</p>
             </div>
           </div>
         </div>
@@ -399,6 +378,10 @@ export default function ScanPage() {
                 </p>
               </div>
               <div>
+                <span className="text-gray-500">Section</span>
+                <p className="font-semibold text-gray-900">{session.section}</p>
+              </div>
+              <div>
                 <span className="text-gray-500">Segment</span>
                 <p className="font-semibold text-gray-900">{session.segment}</p>
               </div>
@@ -406,7 +389,7 @@ export default function ScanPage() {
                 <span className="text-gray-500">Équipe</span>
                 <p className="font-semibold text-gray-900">{session.equipe}</p>
               </div>
-              <div className="col-span-2">
+              <div>
                 <span className="text-gray-500">Ligne</span>
                 <p className="font-semibold text-gray-900">{session.ligne}</p>
               </div>

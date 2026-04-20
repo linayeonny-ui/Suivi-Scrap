@@ -36,9 +36,25 @@ def create_app():
     # Create tables and default admin
     with app.app_context():
         db.create_all()
+        _migrate_add_section(app)
         _create_default_admin(app)
 
     return app
+
+
+def _migrate_add_section(app):
+    """Add 'section' column to qr_codes and scrap_sessions if missing."""
+    with app.app_context():
+        from sqlalchemy import inspect, text
+        inspector = inspect(db.engine)
+        for table_name in ["qr_codes", "scrap_sessions"]:
+            columns = [col["name"] for col in inspector.get_columns(table_name)]
+            if "section" not in columns:
+                db.session.execute(text(
+                    f"ALTER TABLE {table_name} ADD COLUMN section VARCHAR(100) NOT NULL DEFAULT ''"
+                ))
+                db.session.commit()
+                print(f"Migrated: added 'section' column to {table_name}")
 
 
 def _create_default_admin(app):
