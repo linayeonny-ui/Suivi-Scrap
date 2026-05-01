@@ -11,7 +11,7 @@ const navItems = [
   { to: '/admin/scrap', icon: FileText, label: 'Scrap' },
   { to: '/admin/qr-codes', icon: QrCode, label: 'Codes Affectation' },
   { to: '/admin/reference', icon: Settings, label: 'Référentiels' },
-  { to: '/admin/wire-mappings', icon: Upload, label: 'Fils / CCFE' },
+  { to: '/admin/wire-mappings', icon: Upload, label: 'Fils ou composants / CCFE' },
   { to: '/admin/operator-codes', icon: Key, label: 'Codes Opérateur' },
   { to: '/admin/users', icon: Users, label: 'Utilisateurs' },
   { to: '/admin/export', icon: Download, label: 'Export' },

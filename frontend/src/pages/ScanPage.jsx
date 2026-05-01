@@ -39,6 +39,8 @@ export default function ScanPage() {
   const [filInput, setFilInput] = useState('')
   const [filSuggestions, setFilSuggestions] = useState([])
   const [ccfeValue, setCcfeValue] = useState('')
+  const [ccfeSuggestions, setCcfeSuggestions] = useState([])
+  const [showCcfeSuggestions, setShowCcfeSuggestions] = useState(false)
   const [totalQuantite, setTotalQuantite] = useState('')
   const [totalWeight, setTotalWeight] = useState('')
 
@@ -114,7 +116,7 @@ export default function ScanPage() {
     }).catch(() => setPostes([]))
   }, [selectedArea])
 
-  // Wire autocomplete
+  // Wire autocomplete (by fil)
   const searchWire = useCallback(async (query) => {
     if (query.length < 2) {
       setFilSuggestions([])
@@ -138,6 +140,35 @@ export default function ScanPage() {
   const selectWire = (wire) => {
     setFilInput(wire.fil)
     setCcfeValue(wire.ccfe)
+    setShowSuggestions(false)
+    setShowCcfeSuggestions(false)
+  }
+
+  // CCFE autocomplete (by ccfe)
+  const searchCcfe = useCallback(async (query) => {
+    if (query.length < 2) {
+      setCcfeSuggestions([])
+      setShowCcfeSuggestions(false)
+      return
+    }
+    try {
+      const res = await scrapAPI.searchCcfe(query)
+      setCcfeSuggestions(res.data)
+      setShowCcfeSuggestions(res.data.length > 0)
+    } catch {
+      setCcfeSuggestions([])
+    }
+  }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(() => searchCcfe(ccfeValue), 300)
+    return () => clearTimeout(timer)
+  }, [ccfeValue, searchCcfe])
+
+  const selectCcfe = (wire) => {
+    setCcfeValue(wire.ccfe)
+    setFilInput(wire.fil)
+    setShowCcfeSuggestions(false)
     setShowSuggestions(false)
   }
 
@@ -222,6 +253,8 @@ export default function ScanPage() {
       setSelectedPoste('')
       setFilInput('')
       setCcfeValue('')
+      setCcfeSuggestions([])
+      setShowCcfeSuggestions(false)
       setTotalQuantite('')
       setSplitMode(false)
       setRaisonSplits([{ raison_id: '', quantite: '' }])
@@ -497,18 +530,19 @@ export default function ScanPage() {
                 </div>
               </div>
 
-              {/* Fil with autocomplete */}
+              {/* Fil ou composant with autocomplete */}
               <div className="relative">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Fil *</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Fil ou composant *</label>
                 <input
                   type="text"
                   value={filInput}
                   onChange={(e) => {
                     setFilInput(e.target.value)
                     setCcfeValue('')
+                    setShowCcfeSuggestions(false)
                   }}
                   className="input-field"
-                  placeholder="Tapez le fil..."
+                  placeholder="Tapez le fil ou composant..."
                   autoComplete="off"
                 />
                 {showSuggestions && (
@@ -527,18 +561,37 @@ export default function ScanPage() {
                 )}
               </div>
 
-              {/* CCFE (auto-filled) */}
-              <div>
+              {/* N° Pièce / CCFE / PN with autocomplete */}
+              <div className="relative">
                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                  N° Pièce / CCFE
+                  N° Pièce / CCFE / PN
                 </label>
                 <input
                   type="text"
                   value={ccfeValue}
-                  readOnly
-                  className="input-field bg-gray-50 text-gray-600"
-                  placeholder="Rempli automatiquement"
+                  onChange={(e) => {
+                    setCcfeValue(e.target.value)
+                    setFilInput('')
+                    setShowSuggestions(false)
+                  }}
+                  className="input-field"
+                  placeholder="Tapez le N° Pièce / CCFE / PN..."
+                  autoComplete="off"
                 />
+                {showCcfeSuggestions && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                    {ccfeSuggestions.map((wire) => (
+                      <button
+                        key={wire.id}
+                        className="w-full text-left px-3 py-2 hover:bg-primary-50 text-sm border-b border-gray-50 last:border-0 transition-colors"
+                        onClick={() => selectCcfe(wire)}
+                      >
+                        <span className="font-medium">{wire.ccfe}</span>
+                        <span className="text-gray-500 ml-2">→ {wire.fil}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Quantité totale */}

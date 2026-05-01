@@ -78,8 +78,8 @@ export default function WireMappings() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Fils / CCFE</h2>
-        <p className="text-gray-500 mt-1">Gérer les mappings Fil → CCFE (N° Pièce)</p>
+        <h2 className="text-2xl font-bold text-gray-900">Fils ou composants / CCFE</h2>
+        <p className="text-gray-500 mt-1">Gérer les mappings Fil ou composant → N° Pièce / CCFE / PN</p>
       </div>
 
       {/* Upload section */}
@@ -91,7 +91,7 @@ export default function WireMappings() {
         <div className="card-body">
           <div className="bg-blue-50 rounded-lg p-4 mb-4">
             <p className="text-sm text-blue-700">
-              <strong>Format requis:</strong> Fichier Excel (.xlsx) avec la colonne A = Fil (wire ID) et la colonne B = CCFE (N° Pièce). La première ligne est considérée comme en-tête et sera ignorée.
+              <strong>Format requis:</strong> Fichier Excel (.xlsx) avec la colonne A = Fil ou composant et la colonne B = N° Pièce / CCFE / PN. La première ligne est considérée comme en-tête et sera ignorée.
             </p>
           </div>
 
@@ -151,7 +151,7 @@ export default function WireMappings() {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             className="input-field pl-10"
-            placeholder="Rechercher fil ou CCFE..."
+            placeholder="Rechercher fil/composant ou N° Pièce/CCFE/PN..."
           />
         </div>
         <div className="flex gap-2">
@@ -169,8 +169,8 @@ export default function WireMappings() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="table-header">Fil</th>
-                <th className="table-header">CCFE (N° Pièce)</th>
+                <th className="table-header">Fil ou composant</th>
+                <th className="table-header">N° Pièce / CCFE / PN</th>
                 <th className="table-header text-right">Actions</th>
               </tr>
             </thead>

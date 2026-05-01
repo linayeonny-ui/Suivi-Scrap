@@ -140,12 +140,17 @@ def complete_session(session_id):
 
 @scrap_bp.route("/wire-search", methods=["GET"])
 def search_wire():
-    """Search wire mappings for autocomplete. No auth required."""
+    """Search wire mappings for autocomplete. No auth required.
+    Supports searching by fil (default) or by ccfe when ?by=ccfe."""
     query = request.args.get("q", "").strip()
+    by = request.args.get("by", "fil").strip()
     if not query:
         return jsonify([]), 200
 
-    wires = WireMapping.query.filter(WireMapping.fil.ilike(f"%{query}%")).limit(20).all()
+    if by == "ccfe":
+        wires = WireMapping.query.filter(WireMapping.ccfe.ilike(f"%{query}%")).limit(20).all()
+    else:
+        wires = WireMapping.query.filter(WireMapping.fil.ilike(f"%{query}%")).limit(20).all()
     return jsonify([w.to_dict() for w in wires]), 200
 
 

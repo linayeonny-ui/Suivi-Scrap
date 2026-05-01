@@ -75,6 +75,7 @@ export const scrapAPI = {
   completeSession: (sessionId, total_weight) =>
     api.post(`/scrap/session/${sessionId}/complete`, { total_weight }),
   searchWire: (q) => api.get('/scrap/wire-search', { params: { q } }),
+  searchCcfe: (q) => api.get('/scrap/wire-search', { params: { q, by: 'ccfe' } }),
   getPostesByArea: (areaId) => api.get(`/scrap/postes-by-area/${areaId}`),
 }
 

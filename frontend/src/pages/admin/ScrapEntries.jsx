@@ -371,8 +371,8 @@ export default function ScrapEntries() {
                       <th className="table-header">Area</th>
                       <th className="table-header">Poste</th>
                       <th className="table-header">Type</th>
-                      <th className="table-header">Fil</th>
-                      <th className="table-header">CCFE</th>
+                      <th className="table-header">Fil ou composant</th>
+                      <th className="table-header">N° Pièce / CCFE / PN</th>
                       <th className="table-header">Qté</th>
                       <th className="table-header">Raison</th>
                       <th className="table-header text-right">Actions</th>

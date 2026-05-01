@@ -99,6 +99,13 @@ def update_qr_code(qr_id):
     qr = QRCode.query.get_or_404(qr_id)
     data = request.get_json()
 
+    if "code" in data:
+        new_code = data["code"].strip()
+        if new_code and new_code != qr.code:
+            existing = QRCode.query.filter(QRCode.code == new_code, QRCode.id != qr_id).first()
+            if existing:
+                return jsonify({"error": "Code already exists"}), 400
+            qr.code = new_code
     if "section" in data:
         qr.section = data["section"].strip()
     if "segment" in data:

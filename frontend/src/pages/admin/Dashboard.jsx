@@ -230,14 +230,14 @@ export default function Dashboard() {
         {/* Top Fils */}
         <div className="card">
           <div className="card-header">
-            <h3 className="font-semibold text-gray-900">Top Fils par scrap</h3>
+            <h3 className="font-semibold text-gray-900">Top Fils ou composants par scrap</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100">
-                  <th className="table-header">Fil</th>
-                  <th className="table-header">CCFE</th>
+                  <th className="table-header">Fil ou composant</th>
+                  <th className="table-header">N° Pièce / CCFE / PN</th>
                   <th className="table-header text-right">Entrées</th>
                   <th className="table-header text-right">Quantité</th>
                 </tr>
